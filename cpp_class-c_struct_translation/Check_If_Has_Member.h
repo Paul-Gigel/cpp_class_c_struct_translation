@@ -1,3 +1,4 @@
+//https://stackoverflow.com/questions/1005476/how-to-detect-whether-there-is-a-specific-member-variable-in-class
 //SFINEA!!!
 template<typename T> struct HasPDerived {
 	struct Fallback { int pDerived; };
