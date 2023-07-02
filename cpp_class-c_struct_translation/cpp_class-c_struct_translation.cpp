@@ -1,57 +1,9 @@
-﻿#include <iostream>
+﻿#include "Extract_Types.h"
+#include "Extract_Arguments.h"
+#include "Check_If_Has_Member.h"
+#include <iostream>
 #include <concepts>
 using namespace std;
-// cpp_class-c_struct translation.cpp: Definiert den Einstiegspunkt für die Anwendung.
-//
-template<typename ...T> class Tuple{};
-
-template <std::size_t N, typename... Ts>
-struct NthType;
-
-template <std::size_t N, typename T, typename... Ts>
-struct NthType<N, T, Ts...> : NthType<N - 1, Ts...> {};
-
-template <typename T, typename... Ts>
-struct NthType<0, T, Ts...> {
-	using type = T;
-};
-
-template <std::size_t N, typename... Ts>
-using NthType_t = typename NthType<N, Ts...>::type;
-
-template<int nT, typename T1, typename ...Tn> constexpr NthType<nT, T1, Tn...> unpack(T1 t1, Tn ...tn) noexcept {
-	if (nT == 0) {
-		return t1;
-	}
-	else {
-		nT--;
-		return unpack<Tn..., nT>(tn...);
-	};
-}	//compiletime function
-
-//SFINEA!!!
-template<typename T> struct HasPDerived {
-	struct Fallback	{int pDerived;};
-	struct pDerived : T, Fallback {};
-
-	template<typename C, C> struct ChT;
-
-	template<typename C> static char(&f(ChT<int Fallback::*, &C::pDerived>*))[1];
-	template<typename C> static char(&f(...))[2];
-
-	static bool const value = sizeof(f<pDerived>(0)) == 2;
-};
-template<typename T> struct HasPSelf {
-	struct Fallback { int pSelf; };
-	struct pSelf : T, Fallback {};
-
-	template<typename C, C> struct ChT;
-
-	template<typename C> static char(&f(ChT<int Fallback::*, &C::pSelf>*))[1];
-	template<typename C> static char(&f(...))[2];
-
-	static bool const value = sizeof(f<pSelf>(0)) == 2;
-};
 
 template<typename Self, typename Derived>
 struct ForwardByOffset {
