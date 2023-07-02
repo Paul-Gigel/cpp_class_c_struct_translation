@@ -24,7 +24,7 @@ class BaseA {
 public :
 	template<typename ...T> BaseA(T ...t) {
 		if constexpr (HasPDerived<NthType_t<0, T...>>::value && HasPSelf<NthType_t<0, T...>>::value) {
-			unsigned long long displacement = (unsigned long long)unpack<0, T...>(t...).pSelf - (unsigned long long)unpack<T..., 0>(t...).pDerived;
+			unsigned long long displacement = (unsigned long long)unpack<0, T...>(t...).pSelf - (unsigned long long)unpack<0, T...>(t...).pDerived;
 			memcpy(&(this->failed), &displacement, sizeof(void*));
 		} else {
 			if constexpr (HasPSelf<NthType_t<0, T...>>::value) {
@@ -84,11 +84,11 @@ int main()	{
 	
 	CFinal c1Final;
 	c1Final.derivedFromCBaseA.Dummy.cBaseA.failed = true;
-	/*ForwardByAddress<BaseA> forwardByAddress = {
+	ForwardByAddress<BaseA> forwardByAddress = {
 		(BaseA*)&c1Final.derivedFromCBaseA.Dummy.cBaseA
 	};
 	BaseA base1A = BaseA(forwardByAddress);
-	cout << base1A.getFailed() << endl;
-	*/
+	//cout << base1A.getFailed() << endl;
+	
 	return 0;
 }

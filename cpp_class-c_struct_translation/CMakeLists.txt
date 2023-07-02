@@ -5,5 +5,6 @@ cmake_minimum_required (VERSION 3.8)
 
 # Fügen Sie der ausführbaren Datei dieses Projekts eine Quelle hinzu.
 add_executable (cpp_class-c_struct_translation "cpp_class-c_struct_translation.cpp"  "Extract_Types.h" "Extract_Arguments.h")
-add_executable (test_Extract_Arguments "test_Extract_Arguments.cpp"  "Extract_Types.h" "Extract_Arguments.h")
+add_executable (test_Extract_Arguments "test_Extract_Arguments.cpp" "Extract_Arguments.h")
+add_executable (test_Check_If_Has_Member "test_Check_If_Has_Member.cpp" "Check_If_Has_Member.h")
 # TODO: Fügen Sie bei Bedarf Tests hinzu, und installieren Sie Ziele.
