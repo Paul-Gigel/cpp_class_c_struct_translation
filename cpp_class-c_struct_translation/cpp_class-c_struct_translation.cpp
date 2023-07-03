@@ -23,11 +23,11 @@ class BaseA {
 	} code;
 public :
 	template<typename ...T> BaseA(T ...t) {
-		if constexpr (HasPDerived<NthType_t<0, T...>>::value && HasPSelf<NthType_t<0, T...>>::value) {
+		if constexpr (HaspDerived<NthType_t<0, T...>>::value && HaspSelf<NthType_t<0, T...>>::value) {
 			unsigned long long displacement = (unsigned long long)unpack<0, T...>(t...).pSelf - (unsigned long long)unpack<0, T...>(t...).pDerived;
 			memcpy(&(this->failed), &displacement, sizeof(void*));
 		} else {
-			if constexpr (HasPSelf<NthType_t<0, T...>>::value) {
+			if constexpr (HaspSelf<NthType_t<0, T...>>::value) {
 				unsigned long long displacement = (unsigned long long)unpack<0, T...>(t...).pSelf;
 				memcpy(&(this->failed), &displacement, sizeof(void*));
 			} else {
@@ -36,13 +36,13 @@ public :
 		}
 	}
 	template<typename ...T> bool getFailed(T ...t) {
-		if constexpr (HasPDerived<NthType_t<0, T...>>::value && HasPSelf<NthType_t<0, T...>>::value) {
+		if constexpr (HaspDerived<NthType_t<0, T...>>::value && HaspSelf<NthType_t<0, T...>>::value) {
 			return ((BaseA*)(
 				(void*)((unsigned char*)unpack<0, T...>(t...).pDerived + this->failed)
 				))->failed;
 		}
 		else {
-			if constexpr (HasPSelf<NthType_t<0, T...>>::value) {
+			if constexpr (HaspSelf<NthType_t<0, T...>>::value) {
 				unsigned long long adress;
 				memcpy(&adress, &(this->failed), sizeof(void*));
 				return ((BaseA*)adress)->failed;

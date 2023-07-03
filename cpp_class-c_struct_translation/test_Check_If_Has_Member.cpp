@@ -11,10 +11,10 @@ struct ForwardByAddress {
 	Self* pSelf;
 };
 int main() {
-	std::cout << HasPDerived<ForwardByOffset<int, char>>::value << "\n";
-	std::cout << HasPSelf<ForwardByOffset<int, char>>::value << "\n";
+	std::cout << HaspDerived<ForwardByOffset<int, char>>::value << "\n";
+	std::cout << HaspSelf<ForwardByOffset<int, char>>::value << "\n";
 
-	std::cout << HasPDerived<ForwardByAddress<int>>::value << "\n";
-	std::cout << HasPSelf<ForwardByAddress<int>>::value << "\n";
+	std::cout << HaspDerived<ForwardByAddress<int>>::value << "\n";
+	std::cout << HaspSelf<ForwardByAddress<int>>::value << "\n";
 	return 0;
 }
