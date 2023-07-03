@@ -52,6 +52,23 @@ public :
 			}
 		}
 	}
+	template<typename ...T> void setFailed(T ...t) {
+		if constexpr (HaspDerived<NthType_t<0, T...>>::value && HaspSelf<NthType_t<0, T...>>::value) {
+			((BaseA*)(
+				(void*)((unsigned char*)unpack<0, T...>(t...).pDerived + this->failed)
+				))->failed = unpack<1, T...>(t...);
+		}
+		else {
+			if constexpr (HaspSelf<NthType_t<0, T...>>::value) {
+				unsigned long long adress;
+				memcpy(&adress, &(this->failed), sizeof(void*));
+				((BaseA*)adress)->failed = unpack<1, T...>(t...);
+			}
+			else {
+				this->failed = unpack<0, T...>(t...);
+			}
+		}
+	}
 };
 extern "C" {
 	struct CBaseA {
@@ -77,20 +94,28 @@ extern "C" {
 
 int main()	{
 	CFinal cFinal;
-	cFinal.derivedFromCBaseA.Dummy.cBaseA.failed = true;
 	ForwardByOffset<BaseA, CFinal> forwardByOffset = {
 		(BaseA*)&cFinal.derivedFromCBaseA.Dummy.cBaseA,
 		&cFinal
 	};
 	BaseA baseA = BaseA(forwardByOffset);
+	cFinal.derivedFromCBaseA.Dummy.cBaseA.failed = true;
 	cout << baseA.getFailed(forwardByOffset) << endl;
-	
+	baseA.setFailed(forwardByOffset, false);
+	cout << baseA.getFailed(forwardByOffset) << endl;
+	baseA.setFailed(forwardByOffset, true);
+	cout << baseA.getFailed(forwardByOffset) << endl;
+
 	CFinal c1Final;
-	c1Final.derivedFromCBaseA.Dummy.cBaseA.failed = true;
 	ForwardByAddress<BaseA> forwardByAddress = {
 		(BaseA*)&c1Final.derivedFromCBaseA.Dummy.cBaseA
 	};
 	BaseA base1A = BaseA(forwardByAddress);
+	c1Final.derivedFromCBaseA.Dummy.cBaseA.failed = true;
+	cout << base1A.getFailed(forwardByAddress) << endl;
+	base1A.setFailed(forwardByAddress, false);
+	cout << base1A.getFailed(forwardByAddress) << endl;
+	base1A.setFailed(forwardByAddress, true);
 	cout << base1A.getFailed(forwardByAddress) << endl;
 	
 	return 0;
