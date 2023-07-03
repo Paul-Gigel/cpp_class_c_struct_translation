@@ -14,6 +14,15 @@ template<typename Self>
 struct ForwardByAddress {
 	Self* pSelf;
 };
+template<typename ...T> concept HAS_MEMBER_or_VOID_constraint =
+	requires(T ...t) {
+		sizeof...(t) == 0;
+	} || 
+	requires(T ...t) {
+		(HaspDerived<NthType_t<0, T...>>::value && 
+		HaspSelf<NthType_t<0, T...>>::value); 
+	};
+
 class BaseA {
 	alignas(sizeof(void*)) bool failed;
 	union alignas(void*) Code {
@@ -22,18 +31,20 @@ class BaseA {
 		int codeInt;
 	} code;
 public :
-	template<typename ...T> BaseA(T ...t) {
-		if constexpr (HaspDerived<NthType_t<0, T...>>::value && HaspSelf<NthType_t<0, T...>>::value) {
+	template<typename ...T> 
+	requires HAS_MEMBER_or_VOID_constraint<T...>
+	BaseA(T ...t) {
+		if constexpr (sizeof...(t) == 0) {
+
+		}
+		else if constexpr (HaspDerived<NthType_t<0, T...>>::value && HaspSelf<NthType_t<0, T...>>::value) {
 			unsigned long long displacement = (unsigned long long)unpack<0, T...>(t...).pSelf - (unsigned long long)unpack<0, T...>(t...).pDerived;
 			memcpy(&(this->failed), &displacement, sizeof(void*));
-		} else {
-			if constexpr (HaspSelf<NthType_t<0, T...>>::value) {
-				unsigned long long displacement = (unsigned long long)unpack<0, T...>(t...).pSelf;
-				memcpy(&(this->failed), &displacement, sizeof(void*));
-			} else {
-				//do nothing (standart ctor)
-			}
 		}
+		else if constexpr (HaspSelf<NthType_t<0, T...>>::value) {
+			unsigned long long displacement = (unsigned long long)unpack<0, T...>(t...).pSelf;
+			memcpy(&(this->failed), &displacement, sizeof(void*));
+		};
 	}
 	template<typename ...T> bool getFailed(T ...t) {
 		if constexpr (HaspDerived<NthType_t<0, T...>>::value && HaspSelf<NthType_t<0, T...>>::value) {
@@ -117,6 +128,14 @@ int main()	{
 	cout << base1A.getFailed(forwardByAddress) << endl;
 	base1A.setFailed(forwardByAddress, true);
 	cout << base1A.getFailed(forwardByAddress) << endl;
+
+	BaseA base2A = BaseA();
+	//base2A.setFailed(true);
+	//cout << base2A.getFailed() << endl;
+	//base2A.setFailed(false);
+	//cout << base2A.getFailed() << endl;
+	//base2A.setFailed(true);
+	//cout << base2A.getFailed() << endl;
 	
 	return 0;
 }
