@@ -36,17 +36,20 @@ public :
 		}
 	}
 	template<typename ...T> bool getFailed(T ...t) {
-		if constexpr (std::is_same<Tuple<T...>, Tuple<ForwardByOffset<BaseA, int>>>::value) {
+		if constexpr (HasPDerived<NthType_t<0, T...>>::value && HasPSelf<NthType_t<0, T...>>::value) {
 			return ((BaseA*)(
-				(void*)((unsigned char*)unpack<0, T...>(t...).pderived + this->failed)
+				(void*)((unsigned char*)unpack<0, T...>(t...).pDerived + this->failed)
 				))->failed;
 		}
-		if constexpr (std::is_same<Tuple<T...>, Tuple<ForwardByAddress<BaseA>>>::value)	{
-			unsigned long long adress;
-			memcpy(&adress, &(this->failed), sizeof(void*));
- 			return ((BaseA*)adress)->failed;
-		} else	{
-			return this->failed;
+		else {
+			if constexpr (HasPSelf<NthType_t<0, T...>>::value) {
+				unsigned long long adress;
+				memcpy(&adress, &(this->failed), sizeof(void*));
+				return ((BaseA*)adress)->failed;
+			}
+			else {
+				return this->failed;
+			}
 		}
 	}
 };
@@ -74,13 +77,13 @@ extern "C" {
 
 int main()	{
 	CFinal cFinal;
-	cFinal.derivedFromCBaseA.Dummy.cBaseA.failed = false;
+	cFinal.derivedFromCBaseA.Dummy.cBaseA.failed = true;
 	ForwardByOffset<BaseA, CFinal> forwardByOffset = {
 		(BaseA*)&cFinal.derivedFromCBaseA.Dummy.cBaseA,
 		&cFinal
 	};
 	BaseA baseA = BaseA(forwardByOffset);
-	//cout << baseA.getFailed(&cFinal) << endl;
+	cout << baseA.getFailed(forwardByOffset) << endl;
 	
 	CFinal c1Final;
 	c1Final.derivedFromCBaseA.Dummy.cBaseA.failed = true;
@@ -88,7 +91,7 @@ int main()	{
 		(BaseA*)&c1Final.derivedFromCBaseA.Dummy.cBaseA
 	};
 	BaseA base1A = BaseA(forwardByAddress);
-	//cout << base1A.getFailed() << endl;
+	cout << base1A.getFailed(forwardByAddress) << endl;
 	
 	return 0;
 }

@@ -10,10 +10,11 @@ template<typename Self>
 struct ForwardByAddress {
 	Self* pSelf;
 };
-ForwardByAddress<int> forwardByAddress;
-ForwardByOffset<int, char> forwardByOffset;
 int main() {
-	std::cout<<HasPDerived<ForwardByAddress<int>>::value<<"\n";
-	std::cout<<HasPSelf<ForwardByAddress<int>>::value<<"\n";
+	std::cout << HasPDerived<ForwardByOffset<int, char>>::value << "\n";
+	std::cout << HasPSelf<ForwardByOffset<int, char>>::value << "\n";
+
+	std::cout << HasPDerived<ForwardByAddress<int>>::value << "\n";
+	std::cout << HasPSelf<ForwardByAddress<int>>::value << "\n";
 	return 0;
 }
