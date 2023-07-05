@@ -1,4 +1,4 @@
-﻿#include "Extract_Types.h"
+#include "Extract_Types.h"
 #include "Extract_Arguments.h"
 #include "Check_If_Has_Member.h"
 #include "ForwardBy.h"
@@ -8,19 +8,28 @@
 using namespace std;
 
 //this BaseA thing needs to be somekind of templated child, that either inherites from the "Real" class ore a Dummy pointerclass
-class BaseA {
+class BaseA : public BaseA_real/*, public BaseA_ptr*/ {
+
+};
+class BaseA_ptr {
+	union {
+		std::intptr_t offset;
+		std::intptr_t pointer;
+	};
+};
+class BaseA_real {
 	alignas(sizeof(void*)) bool failed;
 	union alignas(void*) {
 		void* codeVoidptr;
 		unsigned long codeUnsignedLong;
 		int codeInt;
 	} code;
-public :
+public:
 	using Code = decltype(code);
-	
-	template<typename ...T> 
+
+	template<typename ...T>
 	requires VOID_constraint<T...> || HAS_pDerived_pSelf_constraint<T...>
-	BaseA(T ...t) {
+		BaseA_real(T ...t) {
 		if constexpr (sizeof...(t) == 0) {								// that will be ctor for real base
 			//standart ctor initializes everithing with null			//
 			this->failed = 0;											//
@@ -36,9 +45,9 @@ public :
 			memcpy(&(this->failed), &displacement, sizeof(void*));
 		};
 	}
-	template<typename ...T> 
+	template<typename ...T>
 	requires VOID_constraint<T...> || HAS_pDerived_pSelf_constraint<T...>
-	bool getFailed(const T& ...t) const {
+		bool getFailed(const T& ...t) const {
 		if constexpr (sizeof...(t) == 0) {
 			return this->failed;
 		}
@@ -53,9 +62,9 @@ public :
 			return ((BaseA*)adress)->failed;
 		}
 	}
-	template<typename ...T> 
+	template<typename ...T>
 	requires MAX_ARGUMENT_COUNT_constraint<2, T...>
-	void setFailed(const T &...t) {
+		void setFailed(const T &...t) {
 		if constexpr (sizeof...(t) == 1) {
 			this->failed = unpack<0, T...>(t...);
 		}
@@ -88,6 +97,7 @@ public :
 		}
 	}
 };
+
 extern "C" {
 	struct CBaseA {
 		volatile alignas(void*) bool failed;
@@ -116,44 +126,7 @@ void myFunction(T... t) {
 	// Function body
 }
 
-int main()	{
-	CFinal cFinal;
-	ForwardByOffset<BaseA, CFinal> forwardByOffset = {
-		(BaseA*)&cFinal.derivedFromCBaseA.Dummy.cBaseA,
-		&cFinal
-	};
-	BaseA baseA = BaseA(forwardByOffset);
-	cFinal.derivedFromCBaseA.Dummy.cBaseA.failed = true;
-	cout << baseA.getFailed(forwardByOffset) << endl;
-	baseA.setFailed(forwardByOffset, false);
-	cout << baseA.getFailed(forwardByOffset) << endl;
-	baseA.setFailed(forwardByOffset, true);
-	cout << baseA.getFailed(forwardByOffset) << endl;
-
-	CFinal c1Final;
-	ForwardByAddress<BaseA> forwardByAddress = {
-		(BaseA*)&c1Final.derivedFromCBaseA.Dummy.cBaseA
-	};
-	BaseA base1A = BaseA(forwardByAddress);
-	c1Final.derivedFromCBaseA.Dummy.cBaseA.failed = true;
-	cout << base1A.getFailed(forwardByAddress) << endl;
-	base1A.setFailed(forwardByAddress, false);
-	cout << base1A.getFailed(forwardByAddress) << endl;
-	base1A.setFailed(forwardByAddress, true);
-	cout << base1A.getFailed(forwardByAddress) << endl;
-
-	BaseA base2A = BaseA();
-	base2A.setFailed(true);
-	cout << base2A.getFailed() << endl;
-	base2A.setFailed(false);
-	cout << base2A.getFailed() << endl;
-	base2A.setFailed(true);
-	cout << base2A.getFailed() << endl;
+int main() {
 	
-
-	//myFunction<>({});
-
-		return 0;
-
 	return 0;
 }
