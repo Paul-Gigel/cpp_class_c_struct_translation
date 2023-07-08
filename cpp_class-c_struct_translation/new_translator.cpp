@@ -7,7 +7,7 @@
 #include <concepts>
 using namespace std;
 
-//this BaseA thing needs to be somekind of templated child, that either inherites from the "Real" class ore a Dummy pointerclass
+//this BaseA thing needs to be somekind of templated child, that either inherites from the "Real" class or a Dummy pointerclass
 class BaseA_ptr {
 	union {
 		std::intptr_t offset;
@@ -22,10 +22,11 @@ class BaseA_real {
 		int codeInt;
 	} code;
 };
+template<bool UseAsPtr> class BaseA;
+template<> class BaseA<0> : BaseA_real	{};
+template<> class BaseA<1> : BaseA_ptr	{};
 
-class BaseA : public BaseA_real/*, public BaseA_ptr*/ {
 
-};
 extern "C" {
 	struct CBaseA {
 		volatile alignas(void*) bool failed;
@@ -48,13 +49,7 @@ extern "C" {
 	};
 }
 
-
-template<typename... T>
-void myFunction(T... t) {
-	// Function body
-}
-
 int main() {
-	
+	BaseA<0> baseA = BaseA<0>();
 	return 0;
 }
