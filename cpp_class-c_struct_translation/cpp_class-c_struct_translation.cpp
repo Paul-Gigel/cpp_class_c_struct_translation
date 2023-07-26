@@ -9,7 +9,9 @@ using namespace std;
 
 //this BaseA thing needs to be somekind of templated child, that either inherites from the "Real" class ore a Dummy pointerclass
 class BaseA {
+//#pragma pack(push, 1)
 	alignas(sizeof(void*)) bool failed;
+//#pragma pack(pop)
 	union alignas(void*) {
 		void* codeVoidptr;
 		unsigned long codeUnsignedLong;
@@ -28,6 +30,7 @@ public :
 		}																//
 		//below will be ctor for dummy base
 		else if constexpr (HaspDerived<NthType_t<0, T...>>::value && HaspSelf<NthType_t<0, T...>>::value) {
+			(unsigned long long)unpack<0, T...>(t...).pSelf - (unsigned long long)unpack<0, T...>(t...).pDerived;
 			unsigned long long displacement = (unsigned long long)unpack<0, T...>(t...).pSelf - (unsigned long long)unpack<0, T...>(t...).pDerived;
 			memcpy(&(this->failed), &displacement, sizeof(void*));
 		}
