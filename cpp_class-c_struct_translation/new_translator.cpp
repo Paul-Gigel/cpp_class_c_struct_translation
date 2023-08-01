@@ -3,6 +3,29 @@
 #include "Extract_Arguments.h"
 #include "Concepts.h"
 #include <iostream>
+
+extern "C" {
+	struct CBaseA {
+		volatile alignas(void*) bool failed;
+		union alignas(void*) Code {
+			void* codeVoidptr;
+			unsigned long codeUnsignedLong;
+			int codeInt;
+		} code;
+	};
+	typedef struct DerivedFromCBaseA
+	{
+		unsigned int PEParserStructurType;
+		union {
+			CBaseA cBaseA;
+			/*other struct instances...*/
+		} Dummy;
+	} *pDerivedFromCBaseA;
+	typedef struct CFinal {
+		DerivedFromCBaseA derivedFromCBaseA;
+	};
+}
+
 template<typename Self, typename Derived>
 struct ForwardByOffset {
 	Self* pSelf;
@@ -57,25 +80,25 @@ public:
 	template<typename T>
 	BaseA_ptr(T t) {
 		if constexpr (HaspDerived<T>::value && HaspSelf<T>::value) {
-			std::intptr_t displacement = t.pSelf - t.pDerived;
+			std::intptr_t displacement = (std::intptr_t)t.pSelf - (std::intptr_t)t.pDerived;
 			memcpy(&(offset), &displacement, sizeof(void*));
 		}
 		else if constexpr (HaspSelf<T>::value) {
-			std::intptr_t displacement = T.pSelf;
+			std::intptr_t displacement = (std::intptr_t)T.pSelf;
 			memcpy(&(pointer), &displacement, sizeof(void*));
 		};
 	};
 	template<typename T>
 	bool getFailed(const T& t) const {
 		if constexpr (HaspDerived<T>::value && HaspSelf<T>::value) {
-			return ((BaseA_real*)(
+			return ((decltype(t.pDerived))(
 				(void*)((unsigned char*)t.pDerived + offset)
 				))->getFailed();
 		}
 		else if constexpr (HaspSelf<T>::value) {
 			unsigned long long adress;
 			memcpy(&adress, &(pointer), sizeof(void*));
-			return ((BaseA_real*)adress)->getFailed();
+			return ((decltype(t.pSelf)*)adress)->getFailed();
 		}
 	}
 	template<typename ...T> 
@@ -93,37 +116,35 @@ public:
 		}
 	}
 };
-template<bool UseAsPtr> class BaseA;
+class BaseA_c : public CBaseA	{
+	BaseA_c() = default;
+	template <typename = void>
+	bool getFailed() const {
+		return this->failed;
+	}
+	template <typename = void>
+	decltype(code) getCode() const {
+		return this->code;
+	}
+	template <typename = void>
+	void setFailed(const bool& value) {
+		this->failed = value;
+	}
+	template <typename = void>
+	void setCode(const decltype(code) & value) {
+		this->code = value;
+	}
+};
+template<unsigned int UseAsPtr> class BaseA;
 template<> class BaseA<0> : public BaseA_real	{};
 template<> class BaseA<1> : public BaseA_ptr	{};
+template<> class BaseA<2> : public BaseA_c		{};
 
-
-extern "C" {
-	struct CBaseA {
-		volatile alignas(void*) bool failed;
-		union alignas(void*) Code {
-			void* codeVoidptr;
-			unsigned long codeUnsignedLong;
-			int codeInt;
-		} code;
-	};
-	typedef struct DerivedFromCBaseA
-	{
-		unsigned int PEParserStructurType;
-		union {
-			CBaseA cBaseA;
-			/*other struct instances...*/
-		} Dummy;
-	} *pDerivedFromCBaseA;
-	typedef struct CFinal {
-		DerivedFromCBaseA derivedFromCBaseA;
-	};
-}
 int main() {
 	CFinal cFinal;
-	ForwardByOffset<std::intptr_t, std::intptr_t> forwardByOffset = {
-		(std::intptr_t*)&cFinal.derivedFromCBaseA.Dummy.cBaseA,
-		(std::intptr_t*)&cFinal
+	ForwardByOffset forwardByOffset = {
+		&cFinal.derivedFromCBaseA.Dummy.cBaseA,
+		&cFinal
 	};
 	BaseA<1> baseA = BaseA<1>(forwardByOffset);
 	cFinal.derivedFromCBaseA.Dummy.cBaseA.failed = true;
