@@ -45,6 +45,26 @@ using namespace std;
 // literal type
 // this BaseA thing needs to be somekind of templated child, that either inherites from the "Real" class or a Dummy pointerclass
 // HAS_MEMBER_VARIABLE_MACRO implement as operator->() or operator.() as part of a constexpr wrapper class
+class BaseA_c : public CBaseA {
+public:
+	BaseA_c() = default;
+	template <typename = void>
+	constexpr bool getFailed() const {
+		return this->failed;
+	}
+	template <typename = void>
+	constexpr decltype(code) getCode() const {
+		return this->code;
+	}
+	template <typename = void>
+	constexpr void setFailed(const bool& value) {
+		this->failed = value;
+	}
+	template <typename = void>
+	constexpr void setCode(const decltype(code)& value) {
+		this->code = value;
+	}
+};
 class BaseA_real {
 	alignas(sizeof(void*)) bool failed;
 	union {
@@ -91,8 +111,8 @@ public:
 	template<typename T>
 	bool getFailed(const T& t) const {
 		if constexpr (HaspDerived<T>::value && HaspSelf<T>::value) {
-			return ((decltype(t.pDerived))(
-				(void*)((unsigned char*)t.pDerived + offset)
+			return ((BaseA_c*)(
+				(void*)((unsigned char*)(std::intptr_t)t.pDerived + (std::intptr_t)offset)
 				))->getFailed();
 		}
 		else if constexpr (HaspSelf<T>::value) {
@@ -116,25 +136,7 @@ public:
 		}
 	}
 };
-class BaseA_c : public CBaseA	{
-	BaseA_c() = default;
-	template <typename = void>
-	bool getFailed() const {
-		return this->failed;
-	}
-	template <typename = void>
-	decltype(code) getCode() const {
-		return this->code;
-	}
-	template <typename = void>
-	void setFailed(const bool& value) {
-		this->failed = value;
-	}
-	template <typename = void>
-	void setCode(const decltype(code) & value) {
-		this->code = value;
-	}
-};
+
 template<unsigned int UseAsPtr> class BaseA;
 template<> class BaseA<0> : public BaseA_real	{};
 template<> class BaseA<1> : public BaseA_ptr	{};
