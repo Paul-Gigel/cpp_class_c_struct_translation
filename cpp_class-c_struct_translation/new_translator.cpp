@@ -4,6 +4,7 @@
 #include "Concepts.h"
 #include <iostream>
 
+//c compatible header
 extern "C" {
 	struct CBaseA {
 		volatile alignas(void*) bool failed;
@@ -26,6 +27,7 @@ extern "C" {
 	};
 }
 
+//translator lib
 template<typename Self, typename Derived>
 struct ForwardByOffset {
 	Self* pSelf;
@@ -37,6 +39,7 @@ struct ForwardByAddress {
 	Self* pSelf;
 	ForwardByAddress(Self* pSelf) : pSelf(pSelf) {};
 };
+
 using namespace std;
 // agregate
 // trivial type
@@ -45,6 +48,8 @@ using namespace std;
 // literal type
 // this BaseA thing needs to be somekind of templated child, that either inherites from the "Real" class or a Dummy pointerclass
 // HAS_MEMBER_VARIABLE_MACRO implement as operator->() or operator.() as part of a constexpr wrapper class
+
+//internal
 class BaseA_c : public CBaseA {
 public:
 	BaseA_c() = default;
@@ -149,7 +154,7 @@ int main() {
 		&cFinal
 	};
 	BaseA<1> baseA = BaseA<1>(forwardByOffset);
-	cFinal.derivedFromCBaseA.Dummy.cBaseA.failed = true;
+	cFinal.derivedFromCBaseA.Dummy.cBaseA.failed = false;
 	cout << baseA.getFailed(forwardByOffset) << endl;
 	/*baseA.setFailed(forwardByOffset, false);
 	cout << baseA.getFailed(forwardByOffset) << endl;
