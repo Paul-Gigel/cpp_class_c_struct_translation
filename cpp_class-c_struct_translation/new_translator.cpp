@@ -30,13 +30,22 @@ extern "C" {
 //translator lib
 template<typename Self, typename Derived>
 struct ForwardByOffset {
-	Self* pSelf;
-	Derived* pDerived;
+	union {
+		Self* pSelf;
+		std::intptr_t pSelfAdress;
+	};
+	union {
+		Derived* pDerived;
+		std::intptr_t pDerivedAdress;
+	};
 	ForwardByOffset(Self* pSelf, Derived* pDerived) : pSelf(pSelf), pDerived(pDerived) {};
 };
 template<typename Self>
 struct ForwardByAddress {
-	Self* pSelf;
+	union {
+		Self* pSelf;
+		std::intptr_t pSelfAdress;
+	};
 	ForwardByAddress(Self* pSelf) : pSelf(pSelf) {};
 };
 
@@ -105,11 +114,11 @@ public:
 	template<typename T>
 	BaseA_ptr(T t) {
 		if constexpr (HaspDerived<T>::value && HaspSelf<T>::value) {
-			std::intptr_t displacement = (std::intptr_t)t.pSelf - (std::intptr_t)t.pDerived;
+			std::intptr_t displacement = t.pSelfAdress - t.pDerivedAdress;
 			memcpy(&(offset), &displacement, sizeof(void*));
 		}
 		else if constexpr (HaspSelf<T>::value) {
-			std::intptr_t displacement = (std::intptr_t)T.pSelf;
+			std::intptr_t displacement = t.pSelfAdress;
 			memcpy(&(pointer), &displacement, sizeof(void*));
 		};
 	};
@@ -117,27 +126,27 @@ public:
 	bool getFailed(const T& t) const {
 		if constexpr (HaspDerived<T>::value && HaspSelf<T>::value) {
 			return ((BaseA_c*)(
-				(void*)((unsigned char*)(std::intptr_t)t.pDerived + (std::intptr_t)offset)
+				(void*)((unsigned char*)t.pDerivedAdress + offset)
 				))->getFailed();
 		}
 		else if constexpr (HaspSelf<T>::value) {
 			unsigned long long adress;
 			memcpy(&adress, &(pointer), sizeof(void*));
-			return ((decltype(t.pSelf)*)adress)->getFailed();
+			return ((BaseA_c*)adress)->getFailed();
 		}
 	}
-	template<typename ...T> 
+	template<typename ...T>
 	requires HAS_pDerived_pSelf_constraint<T...>
-	void setFailed(T ...t, const bool& value) {
+	void setFailed(const bool& value, T ...t) {
 		if constexpr (HaspDerived<NthType_t<0, T...>>::value && HaspSelf<NthType_t<0, T...>>::value) {
-			return ((BaseA_real*)(
-				(void*)((unsigned char*)unpack<0, T...>(t...).pDerived + offset)
+			((BaseA_c*)(
+				(void*)((unsigned char*)unpack<0, T...>(t...).pDerivedAdress + offset)
 				))->setFailed(value);
 		}
-		else if constexpr (sizeof...(t) == 0){
+		else if constexpr (HaspSelf<NthType_t<0, T...>>::value){
 			unsigned long long adress;
 			memcpy(&adress, &(pointer), sizeof(void*));
-			return ((BaseA_real*)adress)->failed;
+			((BaseA_c*)adress)->setFailed(value);
 		}
 	}
 };
@@ -154,31 +163,31 @@ int main() {
 		&cFinal
 	};
 	BaseA<1> baseA = BaseA<1>(forwardByOffset);
-	cFinal.derivedFromCBaseA.Dummy.cBaseA.failed = false;
+	cFinal.derivedFromCBaseA.Dummy.cBaseA.failed = true;
 	cout << baseA.getFailed(forwardByOffset) << endl;
-	/*baseA.setFailed(forwardByOffset, false);
+	baseA.setFailed(false, forwardByOffset);
 	cout << baseA.getFailed(forwardByOffset) << endl;
-	baseA.setFailed(forwardByOffset, true);
+	baseA.setFailed(true, forwardByOffset);
 	cout << baseA.getFailed(forwardByOffset) << endl;
-
+	
 	CFinal c1Final;
-	ForwardByAddress<BaseA> forwardByAddress = {
-		(BaseA*)&c1Final.derivedFromCBaseA.Dummy.cBaseA
+	ForwardByAddress forwardByAddress = {
+		&c1Final.derivedFromCBaseA.Dummy.cBaseA
 	};
-	BaseA base1A = BaseA(forwardByAddress);
-	c1Final.derivedFromCBaseA.Dummy.cBaseA.failed = true;
+	BaseA<1> base1A = BaseA<1>(forwardByAddress);
+	c1Final.derivedFromCBaseA.Dummy.cBaseA.failed = false;
 	cout << base1A.getFailed(forwardByAddress) << endl;
-	base1A.setFailed(forwardByAddress, false);
+	base1A.setFailed(true, forwardByAddress);
 	cout << base1A.getFailed(forwardByAddress) << endl;
-	base1A.setFailed(forwardByAddress, true);
+	base1A.setFailed(false, forwardByAddress);
 	cout << base1A.getFailed(forwardByAddress) << endl;
 
-	BaseA base2A = BaseA();
+	BaseA<0> base2A = BaseA<0>();
 	base2A.setFailed(true);
 	cout << base2A.getFailed() << endl;
 	base2A.setFailed(false);
 	cout << base2A.getFailed() << endl;
 	base2A.setFailed(true);
 	cout << base2A.getFailed() << endl;
-	return 0;*/
+	return 0;
 };
