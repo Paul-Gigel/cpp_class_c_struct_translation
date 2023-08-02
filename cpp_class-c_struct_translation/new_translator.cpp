@@ -59,6 +59,7 @@ using namespace std;
 // HAS_MEMBER_VARIABLE_MACRO implement as operator->() or operator.() as part of a constexpr wrapper class
 
 //internal
+
 class BaseA_c : public CBaseA {
 public:
 	BaseA_c() = default;
@@ -147,6 +148,48 @@ public:
 			unsigned long long adress;
 			memcpy(&adress, &(pointer), sizeof(void*));
 			((BaseA_c*)adress)->setFailed(value);
+		}
+	}
+};
+template<typename Base>
+class BaseA_impl : public Base {
+public:
+	template<typename T>
+	BaseA_impl(T t) {
+		if constexpr (HaspDerived<T>::value && HaspSelf<T>::value) {
+			std::intptr_t displacement = t.pSelfAdress - t.pDerivedAdress;
+			memcpy(&(this.offset), &displacement, sizeof(void*));
+		}
+		else if constexpr (HaspSelf<T>::value) {
+			std::intptr_t displacement = t.pSelfAdress;
+			memcpy(&(this.pointer), &displacement, sizeof(void*));
+		};
+	};
+	template<typename T>
+	bool getFailed(const T& t) const {
+		if constexpr (HaspDerived<T>::value && HaspSelf<T>::value) {
+			return ((Base*)(
+				(void*)((unsigned char*)t.pDerivedAdress + this.offset)
+				))->getFailed();
+		}
+		else if constexpr (HaspSelf<T>::value) {
+			unsigned long long adress;
+			memcpy(&adress, &(this.pointer), sizeof(void*));
+			return ((Base*)adress)->getFailed();
+		}
+	}
+	template<typename ...T>
+	requires HAS_pDerived_pSelf_constraint<T...>
+		void setFailed(const bool& value, T ...t) {
+		if constexpr (HaspDerived<NthType_t<0, T...>>::value && HaspSelf<NthType_t<0, T...>>::value) {
+			((Base*)(
+				(void*)((unsigned char*)unpack<0, T...>(t...).pDerivedAdress + this.offset)
+				))->setFailed(value);
+		}
+		else if constexpr (HaspSelf<NthType_t<0, T...>>::value) {
+			unsigned long long adress;
+			memcpy(&adress, &(this.pointer), sizeof(void*));
+			((Base*)adress)->setFailed(value);
 		}
 	}
 };
