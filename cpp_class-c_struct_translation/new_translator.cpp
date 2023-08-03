@@ -160,7 +160,14 @@ public:
 		}
 	}
 };
-template<typename Base>
+class BaseA_ptr_test {
+protected:
+	union {
+		std::intptr_t offset;
+		std::intptr_t pointer;
+	};
+};
+template<typename Base, typename ...ForwardBy>
 class BaseA_impl : public Base {
 public:
 	template<typename ...T>
@@ -174,12 +181,12 @@ public:
 	template<typename ...T>
 	using firstType = firstTypeClosure<T...>::firstType;
 
-	template<typename ...T> BaseA_impl(T ...t) {
-		using firstTypeT = firstType<T...>;
-		constexpr auto firstParamT = []() constexpr {
-			constexpr const bool& sizeNZero = (sizeof...(t) != 0);
-			if constexpr (sizeNZero) return unpack<0, T...>(t...);
-			else return false;
+	BaseA_impl(ForwardBy ...t) {
+		using firstTypeT = firstType<ForwardBy...>;
+		constexpr const firstTypeT& firstParamT = [&]() {
+			if constexpr ((sizeof...(t) != 0)) {
+				return unpack<0, ForwardBy...>(t...);
+			}
 		}();
 		if constexpr (sizeof...(t) == 0) {
 			//static_assert(false, "this did not work");
@@ -284,7 +291,7 @@ int main() {
 	cout << base2A.getFailed() << endl;
 
 	std::cout << "259\n";
-	BaseA_impl<BaseA_real_test> baseA_impl(); //= BaseA_impl<BaseA_real>::BaseA_impl();
+	BaseA_impl<BaseA_ptr_test, decltype(forwardByAddress)> baseA_impl = BaseA_impl<BaseA_ptr_test, decltype(forwardByAddress)>(forwardByAddress);
 	//baseA_impl.getFailed();
 	std::cout << "262\n";
 	return 0;
