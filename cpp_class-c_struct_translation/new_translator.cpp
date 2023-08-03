@@ -107,6 +107,7 @@ public:
 	}
 };
 class BaseA_real_test {
+protected:
 	alignas(sizeof(void*)) bool failed;
 	union {
 		void* codeVoidptr;
@@ -162,32 +163,35 @@ public:
 template<typename Base>
 class BaseA_impl : public Base {
 public:
-	template<typename ...T> 
-	using firstType = NthType_t<0, T...>;
-	template<void>
-	using firstType = void;
+	template<typename ...T>
+	struct firstTypeClosure {
+		using firstType = NthType_t<0, T...>;
+	};
+	template<>
+	struct firstTypeClosure</*void*/> {
+		using firstType = void;
+	};
+	template<typename ...T>
+	using firstType = firstTypeClosure<T...>::firstType;
 
 	template<typename ...T> BaseA_impl(T ...t) {
 		using firstTypeT = firstType<T...>;
 		constexpr auto firstParamT = []() constexpr {
-			if constexpr (sizeof...(t) == 0) {
-				return true; //unpack<0, T...>(t...);
-			}
-			else {
-				return false;
-			}
+			constexpr const bool& sizeNZero = (sizeof...(t) != 0);
+			if constexpr (sizeNZero) return unpack<0, T...>(t...);
+			else return false;
 		}();
 		if constexpr (sizeof...(t) == 0) {
-			static_assert(false, "this did not work");
+			//static_assert(false, "this did not work");
 			//do noghing (=default) I can not get the spezialisation to work, so thats the solution for now
 		}
 		else if constexpr (HaspDerived<firstTypeT>::value && HaspSelf<firstTypeT>::value) {
-			std::intptr_t displacement = firstParamT.pSelfAdress - firstParamT.pDerivedAdress;
-			memcpy(&(this.offset), &displacement, sizeof(void*));
+			const std::intptr_t& displacement = firstParamT.pSelfAdress - firstParamT.pDerivedAdress;
+			memcpy(&(this->offset), &displacement, sizeof(void*));
 		}
 		else if constexpr (HaspSelf<firstTypeT>::value)	{
-			std::intptr_t displacement = firstParamT.pSelfAdress;
-			memcpy(&(this.pointer), &displacement, sizeof(void*));
+			const std::intptr_t& displacement = firstParamT.pSelfAdress;
+			memcpy(&(this->pointer), &displacement, sizeof(void*));
 		}
 		else {
 			static_assert(false, "to much arguments");
@@ -197,25 +201,39 @@ public:
 
 	template<typename ...T> bool getFailed(const T& ...t) const {
 		using firstTypeT = firstType<T...>;
-		constexpr firstTypeT& firstParamT = unpack<0, T...>(t...);
-		if constexpr (HaspDerived<firstTypeT>::value && HaspSelf<firstTypeT>::value) {
+		constexpr auto firstParamT = []() constexpr {
+			constexpr const bool& sizeNZero = (sizeof...(t) != 0);
+			if constexpr (sizeNZero) return unpack<0, T...>(t...);
+			else return false;
+		}();
+		if constexpr (sizeof...(t) == 0) {
+			return ((Base*)this)->failed;
+		}
+		else if constexpr (HaspDerived<firstTypeT>::value && HaspSelf<firstTypeT>::value) {
 			return ((Base*)(
-				(void*)((unsigned char*)firstParamT.pDerivedAdress + this.offset)
+				(void*)((unsigned char*)firstParamT.pDerivedAdress + this->offset)
 				))->getFailed();
 		}
 		else if constexpr (HaspSelf<firstTypeT>::value) {
 			unsigned long long adress;
-			memcpy(&adress, &(this.pointer), sizeof(void*));
+			memcpy(&adress, &(this->pointer), sizeof(void*));
 			return ((Base*)adress)->getFailed();
 		}
+		else {
+			static_assert(false, "to much arguments");
+		};
 	}
 
 	template<typename ...T> void setFailed(const bool& value, T ...t) {
 		using firstTypeT = firstType<T...>;
-		constexpr firstTypeT& firstParamT = unpack<0, T...>(t...);
+		constexpr auto firstParamT = []() constexpr {
+			constexpr const bool& sizeNZero = (sizeof...(t) != 0);
+			if constexpr (sizeNZero) return unpack<0, T...>(t...);
+			else return false;
+		}();
 		if constexpr (HaspDerived<firstTypeT>::value && HaspSelf<firstTypeT>::value) {
 			((Base*)(
-				(void*)((unsigned char*)firstParamT.pDerivedAdress + this.offset)
+				(void*)((unsigned char*)firstParamT.pDerivedAdress + this->offset)
 				))->setFailed(value);
 		}
 		else if constexpr (HaspSelf<firstTypeT>::value) {
@@ -266,7 +284,7 @@ int main() {
 	cout << base2A.getFailed() << endl;
 
 	std::cout << "259\n";
-	BaseA_impl<BaseA_real_test> baseA_impl; //= BaseA_impl<BaseA_real>::BaseA_impl();
+	BaseA_impl<BaseA_real_test> baseA_impl(); //= BaseA_impl<BaseA_real>::BaseA_impl();
 	//baseA_impl.getFailed();
 	std::cout << "262\n";
 	return 0;
