@@ -106,6 +106,14 @@ public:
 		this->code = value;
 	}
 };
+class BaseA_real_test {
+	alignas(sizeof(void*)) bool failed;
+	union {
+		void* codeVoidptr;
+		unsigned long codeUnsignedLong;
+		int codeInt;
+	} code;
+};
 class BaseA_ptr {
 	union {
 		std::intptr_t offset;
@@ -154,39 +162,63 @@ public:
 template<typename Base>
 class BaseA_impl : public Base {
 public:
-	template<typename T>
-	BaseA_impl(T t) {
-		if constexpr (HaspDerived<T>::value && HaspSelf<T>::value) {
-			std::intptr_t displacement = t.pSelfAdress - t.pDerivedAdress;
+	template<typename ...T> 
+	using firstType = NthType_t<0, T...>;
+	template<void>
+	using firstType = void;
+
+	template<typename ...T> BaseA_impl(T ...t) {
+		using firstTypeT = firstType<T...>;
+		constexpr auto firstParamT = []() constexpr {
+			if constexpr (sizeof...(t) == 0) {
+				return true; //unpack<0, T...>(t...);
+			}
+			else {
+				return false;
+			}
+		}();
+		if constexpr (sizeof...(t) == 0) {
+			static_assert(false, "this did not work");
+			//do noghing (=default) I can not get the spezialisation to work, so thats the solution for now
+		}
+		else if constexpr (HaspDerived<firstTypeT>::value && HaspSelf<firstTypeT>::value) {
+			std::intptr_t displacement = firstParamT.pSelfAdress - firstParamT.pDerivedAdress;
 			memcpy(&(this.offset), &displacement, sizeof(void*));
 		}
-		else if constexpr (HaspSelf<T>::value) {
-			std::intptr_t displacement = t.pSelfAdress;
+		else if constexpr (HaspSelf<firstTypeT>::value)	{
+			std::intptr_t displacement = firstParamT.pSelfAdress;
 			memcpy(&(this.pointer), &displacement, sizeof(void*));
+		}
+		else {
+			static_assert(false, "to much arguments");
 		};
 	};
-	template<typename T>
-	bool getFailed(const T& t) const {
-		if constexpr (HaspDerived<T>::value && HaspSelf<T>::value) {
+	//template<> BaseA_impl() { static_assert(false, "NICEE"); }//= default;
+
+	template<typename ...T> bool getFailed(const T& ...t) const {
+		using firstTypeT = firstType<T...>;
+		constexpr firstTypeT& firstParamT = unpack<0, T...>(t...);
+		if constexpr (HaspDerived<firstTypeT>::value && HaspSelf<firstTypeT>::value) {
 			return ((Base*)(
-				(void*)((unsigned char*)t.pDerivedAdress + this.offset)
+				(void*)((unsigned char*)firstParamT.pDerivedAdress + this.offset)
 				))->getFailed();
 		}
-		else if constexpr (HaspSelf<T>::value) {
+		else if constexpr (HaspSelf<firstTypeT>::value) {
 			unsigned long long adress;
 			memcpy(&adress, &(this.pointer), sizeof(void*));
 			return ((Base*)adress)->getFailed();
 		}
 	}
-	template<typename ...T>
-	requires HAS_pDerived_pSelf_constraint<T...>
-		void setFailed(const bool& value, T ...t) {
-		if constexpr (HaspDerived<NthType_t<0, T...>>::value && HaspSelf<NthType_t<0, T...>>::value) {
+
+	template<typename ...T> void setFailed(const bool& value, T ...t) {
+		using firstTypeT = firstType<T...>;
+		constexpr firstTypeT& firstParamT = unpack<0, T...>(t...);
+		if constexpr (HaspDerived<firstTypeT>::value && HaspSelf<firstTypeT>::value) {
 			((Base*)(
-				(void*)((unsigned char*)unpack<0, T...>(t...).pDerivedAdress + this.offset)
+				(void*)((unsigned char*)firstParamT.pDerivedAdress + this.offset)
 				))->setFailed(value);
 		}
-		else if constexpr (HaspSelf<NthType_t<0, T...>>::value) {
+		else if constexpr (HaspSelf<firstTypeT>::value) {
 			unsigned long long adress;
 			memcpy(&adress, &(this.pointer), sizeof(void*));
 			((Base*)adress)->setFailed(value);
@@ -232,5 +264,10 @@ int main() {
 	cout << base2A.getFailed() << endl;
 	base2A.setFailed(true);
 	cout << base2A.getFailed() << endl;
+
+	std::cout << "259\n";
+	BaseA_impl<BaseA_real_test> baseA_impl; //= BaseA_impl<BaseA_real>::BaseA_impl();
+	//baseA_impl.getFailed();
+	std::cout << "262\n";
 	return 0;
 };
