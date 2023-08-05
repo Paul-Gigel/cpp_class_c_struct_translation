@@ -180,12 +180,28 @@ public:
 	};
 	template<typename ...T>
 	using firstType = firstTypeClosure<T...>::firstType;
-
+	struct TypeAndValueEq {
+		template<typename T1, typename T2>
+		constexpr static friend const bool operator==(T1 left, T2 right) {
+			if constexpr (!std::is_same<T1, T2>) {
+				return false;
+			} 
+			else if constexpr (left != right) {
+				return false;
+			}
+			else {
+				return false;
+			}
+		}
+	};
 	BaseA_impl(ForwardBy ...t) {
 		using firstTypeT = firstType<ForwardBy...>;
-		constexpr const firstTypeT& firstParamT = [&]() {
+		constexpr const auto& firstParamT= [&]()->const auto& {
 			if constexpr ((sizeof...(t) != 0)) {
 				return unpack<0, ForwardBy...>(t...);
+			}
+			else {
+				return false;
 			}
 		}();
 		if constexpr (sizeof...(t) == 0) {
@@ -292,6 +308,7 @@ int main() {
 
 	std::cout << "259\n";
 	BaseA_impl<BaseA_ptr_test, decltype(forwardByAddress)> baseA_impl = BaseA_impl<BaseA_ptr_test, decltype(forwardByAddress)>(forwardByAddress);
+	BaseA_impl<BaseA_ptr_test> baseA_impl1 = BaseA_impl<BaseA_ptr_test>();
 	//baseA_impl.getFailed();
 	std::cout << "262\n";
 	return 0;
