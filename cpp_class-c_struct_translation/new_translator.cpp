@@ -180,17 +180,20 @@ public:
 	};
 	template<typename ...T>
 	using firstType = firstTypeClosure<T...>::firstType;
-	struct TypeAndValueEq {
+	struct ParameterPack {
 		template<typename T1, typename T2>
 		constexpr static friend const bool operator==(T1 left, T2 right) {
-			if constexpr (!std::is_same<T1, T2>) {
+			if constexpr (std::same_as<void, T2> || std::same_as<T1, void>) {
+				return false;
+			}
+			else if constexpr (!std::same_as<T1, T2>) {
 				return false;
 			} 
 			else if constexpr (left != right) {
 				return false;
 			}
 			else {
-				return false;
+				return true;
 			}
 		}
 	};
