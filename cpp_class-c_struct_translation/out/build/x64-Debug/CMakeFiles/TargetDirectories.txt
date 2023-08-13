@@ -1,0 +1,8 @@
+C:/Users/p.gigel/source/repos/cpp_class_c_struct_translation/cpp_class-c_struct_translation/out/build/x64-Debug/CMakeFiles/new_translator.cpp.dir
+C:/Users/p.gigel/source/repos/cpp_class_c_struct_translation/cpp_class-c_struct_translation/out/build/x64-Debug/CMakeFiles/cpp_class-c_struct_translation.dir
+C:/Users/p.gigel/source/repos/cpp_class_c_struct_translation/cpp_class-c_struct_translation/out/build/x64-Debug/CMakeFiles/edit_cache.dir
+C:/Users/p.gigel/source/repos/cpp_class_c_struct_translation/cpp_class-c_struct_translation/out/build/x64-Debug/CMakeFiles/test_Extract_Arguments.dir
+C:/Users/p.gigel/source/repos/cpp_class_c_struct_translation/cpp_class-c_struct_translation/out/build/x64-Debug/CMakeFiles/test_Check_If_Has_Member.dir
+C:/Users/p.gigel/source/repos/cpp_class_c_struct_translation/cpp_class-c_struct_translation/out/build/x64-Debug/CMakeFiles/testcpp.dir
+C:/Users/p.gigel/source/repos/cpp_class_c_struct_translation/cpp_class-c_struct_translation/out/build/x64-Debug/CMakeFiles/ParameterPack.dir
+C:/Users/p.gigel/source/repos/cpp_class_c_struct_translation/cpp_class-c_struct_translation/out/build/x64-Debug/CMakeFiles/rebuild_cache.dir

@@ -3,7 +3,7 @@
 #include "Extract_Arguments.h"
 #include "Concepts.h"
 #include <iostream>
-
+#include <variant>
 //c compatible header
 extern "C" {
 	struct CBaseA {
@@ -181,8 +181,13 @@ public:
 	template<typename ...T>
 	using firstType = firstTypeClosure<T...>::firstType;
 	struct ParameterPack {
+		template<typename T>
+		struct retWrapper {
+			constexpr bool isVoid;
+			const T& value;
+		};
 		template<typename T1, typename T2>
-		constexpr static friend const bool operator==(T1 left, T2 right) {
+		constexpr static const bool operator==(T1 left, T2 right) {
 			if constexpr (std::same_as<void, T2> || std::same_as<T1, void>) {
 				return false;
 			}
@@ -196,10 +201,19 @@ public:
 				return true;
 			}
 		}
+		template<typename T>
+		constexpr static const retWrapper getValue(const T& t) noexcept {
+			if constexpr (ParameterPack::operator==(t, false)) {
+				return { false, t };
+			} 
+			else {
+				return { true, /*FUCK.....*/}
+			}
+		}
 	};
 	BaseA_impl(ForwardBy ...t) {
 		using firstTypeT = firstType<ForwardBy...>;
-		constexpr const auto& firstParamT= [&]()->const auto& {
+		constexpr const auto& firstParamT = [&]()->const auto& {
 			if constexpr ((sizeof...(t) != 0)) {
 				return unpack<0, ForwardBy...>(t...);
 			}
@@ -314,5 +328,7 @@ int main() {
 	BaseA_impl<BaseA_ptr_test> baseA_impl1 = BaseA_impl<BaseA_ptr_test>();
 	//baseA_impl.getFailed();
 	std::cout << "262\n";
+	std::variant<int, char> test;
+	test._Storage
 	return 0;
 };

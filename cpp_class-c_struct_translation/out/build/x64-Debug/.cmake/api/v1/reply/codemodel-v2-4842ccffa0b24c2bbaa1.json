@@ -1,0 +1,104 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.8"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "Project",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "ParameterPack::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ParameterPack-Debug-2efa9fa5de45c1a07d80.json",
+					"name" : "ParameterPack",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "cpp_class-c_struct_translation::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-cpp_class-c_struct_translation-Debug-6c8605af0331b31f29c8.json",
+					"name" : "cpp_class-c_struct_translation",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "new_translator.cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-new_translator.cpp-Debug-a72494d4c2b26809c60e.json",
+					"name" : "new_translator.cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "test_Check_If_Has_Member::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-test_Check_If_Has_Member-Debug-35a0b9a49a53fa410c74.json",
+					"name" : "test_Check_If_Has_Member",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "test_Extract_Arguments::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-test_Extract_Arguments-Debug-56867ad8a1a3e55cb933.json",
+					"name" : "test_Extract_Arguments",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "testcpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-testcpp-Debug-91d0d8878dbf052a63f5.json",
+					"name" : "testcpp",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/Users/p.gigel/source/repos/cpp_class_c_struct_translation/cpp_class-c_struct_translation/out/build/x64-Debug",
+		"source" : "C:/Users/p.gigel/source/repos/cpp_class_c_struct_translation/cpp_class-c_struct_translation"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 2
+	}
+}
