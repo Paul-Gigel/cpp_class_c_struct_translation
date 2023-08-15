@@ -3,11 +3,12 @@
 
 #define HAS_MEMBER_VARIABLE_MACRO(member)\
 template<typename T> struct Has##member {\
-	struct Fallback { int member; };\
+	struct FallbackType {};\
+	struct Fallback { FallbackType member; };\
 	struct Derived : T, Fallback {};\
 	template<typename C, C> struct ChT;\
-	template<typename C> static char(&f(ChT<int Fallback::*, &C::member>*))[1];\
-	template<typename C> static char(&f(...))[2];\
+	template<typename C> consteval static char(&f(ChT<FallbackType Fallback::*, &C::member>*))[1];\
+	template<typename C> consteval static char(&f(...))[2];\
 	constexpr static bool const value = sizeof(f<Derived>(0)) == 2;\
 };\
 template<> struct Has##member<void>	{\

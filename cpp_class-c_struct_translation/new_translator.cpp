@@ -186,6 +186,10 @@ public:
 			constexpr bool isVoid;
 			const T& value;
 		};
+		template<>
+		struct retWrapper<> {
+			constexpr bool isVoid;
+		};
 		template<typename T1, typename T2>
 		constexpr static const bool operator==(T1 left, T2 right) {
 			if constexpr (std::same_as<void, T2> || std::same_as<T1, void>) {
